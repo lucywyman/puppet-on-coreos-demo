@@ -1,0 +1,34 @@
+#cloud-config
+
+hostname: coreos-agent
+
+coreos:
+  units:
+  - name: puppet.service
+    command: start
+    content: |
+      [Unit]
+      Description=Puppet
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      TimeoutStartSec=0
+      ExecStartPre=-/usr/bin/docker kill puppet1
+      ExecStartPre=-/usr/bin/docker rm puppet1
+      ExecStartPre=/usr/bin/docker pull puppet/puppet-agent
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: 00-ens192.network
+    runtime: true
+    content: |
+      [Match]
+      Name=ens192
+
+      [Network]
+      DNS=10.20.1.82
+      Domains=coreos-agent
+      Address=10.20.1.82
+      Gateway=10.0.2.2
