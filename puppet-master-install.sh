@@ -9,14 +9,13 @@ else
     sudo dpkg -i puppetlabs-release-pc1-xenial.deb
     sudo apt-get -yq update
     sudo apt-get -yq install puppetserver
-    #sudo apt-get -yq install puppet
     sudo service puppetserver start
 
     # Configure /etc/hosts file
-    echo "# Host config for Puppet Master and Agent Nodes
-10.20.1.80   puppet-master
-10.20.1.81   puppet-agent 
-10.20.1.82   coreos-agent" >> /etc/hosts
+#    echo "# Host config for Puppet Master and Agent Nodes
+#10.20.1.80   puppet-master
+#10.20.1.81   puppet-agent 
+#10.20.1.82   coreos-agent" >> /etc/hosts
 
     # Add optional alternate DNS names to /etc/puppet/puppet.conf
     sudo echo "
@@ -26,8 +25,4 @@ dns_alt_names = puppet,puppet-master
 server=puppet-master" >> /etc/puppetlabs/puppet/puppet.conf
 
     sudo hostname puppet-master
-    # Install some initial puppet modules on Puppet Master server
-    #puppet module install puppetlabs-ntp
-    #puppet module install garethr-docker
-    #puppet module install puppetlabs-git
 fi

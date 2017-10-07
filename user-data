@@ -17,6 +17,7 @@ coreos:
       ExecStartPre=-/usr/bin/docker kill puppet1
       ExecStartPre=-/usr/bin/docker rm puppet1
       ExecStartPre=/usr/bin/docker pull puppet/puppet-agent
+      ExecStart=/usr/bin/docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
 
       [Install]
       WantedBy=multi-user.target

@@ -7,10 +7,9 @@ Vagrant.configure("2") do |config|
   config.vm.define "puppetmaster" do |master|
     master.vm.box = "ubuntu/xenial64"
     master.vm.hostname = "puppet-master"
-    master.vm.network :"private_network", ip: "10.20.1.80"
+    master.vm.network "private_network", ip: "10.20.1.80",
     master.vm.provision :hosts, :sync_hosts => true
     master.vm.provision "shell", path: "puppet-master-install.sh"
-    #master.vm.network "forwarded_port", guest: 443, host:4443
     master.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--memory", "4096"]
     end
@@ -19,7 +18,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "puppetagent" do |agent|
     agent.vm.box = "centos/7"
     agent.vm.hostname = "puppet-agent"
-    agent.vm.network :"private_network", ip: "10.20.1.81"
+    agent.vm.network "private_network", ip: "10.20.1.81",
     agent.vm.provision :hosts, :sync_hosts => true
     agent.vm.provision "shell", path: "puppet-agent-install.sh"    
   end
@@ -41,7 +40,7 @@ Vagrant.configure("2") do |config|
       v.customize ["modifyvm", :id, "--cpuexecutioncap", "100"]
     end
 
-    agent.vm.network :private_network, ip: "10.20.1.82"
+    agent.vm.network "private_network", ip: "10.20.1.82",
     agent.vm.provision :hosts, :sync_hosts => true
 
     if File.exist?(CLOUD_CONFIG_PATH)

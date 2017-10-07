@@ -4,10 +4,22 @@ Ever wanted to manage your CoreOS infrastructure with Puppet? These are the file
 
 ## Getting Started
 
-### Set up Puppet master and CentOS Agent
+## Installing stuff
 
 ```
+vagrant plugin install vagrant-hosts
+```
+
+### Set up Puppet master and CentOS Agent
+
+First things first, we'll bring all the machines up
+```
 vagrant up
+```
+
+Then run puppet on both the master and CentOS agent to make sure our setup is working
+
+```
 vagrant ssh puppetagent
 sudo su -
 puppet agent -t
@@ -23,18 +35,10 @@ puppet agent -t
 
 ### Connect CoreOS Agent
 
-Create file `/etc/puppetlabs/puppet/puppet.conf` with the following content:
-```
-[agent]
-server=puppet-master
-certname=coreos-agent
-```
-
-Then run puppet agent in a docker container
 ```
 vagrant ssh coreosagent
 sudo su -
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.delivery.puppetlabs.net -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.g -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
 ```
 
 Sign the cert on the master
@@ -45,7 +49,7 @@ puppet cert sign --all
 
 Then run puppet agent again on the CoreOS VM
 ```
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.delivery.puppetlabs.net -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.g -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
 ```
 
 And there you have it!
@@ -79,7 +83,7 @@ and you should see 'Hello World!' printed.
 Then do the same on the CoreOS machine:
 ```
 vagrant ssh coreosagent
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.delivery.puppetlabs.net -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
 cat /etc/motd
 ```
 
