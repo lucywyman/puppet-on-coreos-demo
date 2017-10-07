@@ -9,14 +9,8 @@ else
     sudo yum install -y puppet-agent
     sudo /opt/puppetlabs/bin/puppet resource service puppet ensure=running enable=true
 
-    # Configure /etc/hosts file
-#    sudo echo "10.20.1.80   puppet-master
-#10.20.1.81   puppet-agent 
-#10.20.1.82   coreos-agent" >> /etc/hosts
-
-    # Add optional alternate DNS names to /etc/puppet/puppet.conf
     sudo echo "[agent]
-server=puppet-master" >> /etc/puppetlabs/puppet/puppet.conf
+server=puppet" >> /etc/puppetlabs/puppet/puppet.conf
 
     sudo /opt/puppetlabs/bin/puppet agent --enable
 fi
