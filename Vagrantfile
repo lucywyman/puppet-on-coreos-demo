@@ -2,9 +2,9 @@
 # # vi: set ft=ruby :
 
 CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
-NETWORK = '.delivery.puppetlabs.net'
+#NETWORK = '.delivery.puppetlabs.net'
 #NETWORK = '.wellsely.net'
-#NETWORK = ''
+NETWORK = ''
 
 Vagrant.configure("2") do |config|
   config.vm.define "puppetmaster" do |master|
@@ -12,19 +12,23 @@ Vagrant.configure("2") do |config|
     master.vm.hostname = "puppet-master#{NETWORK}"
     master.vm.network "private_network", ip: "10.20.1.80"
     master.vm.provision :hosts, :sync_hosts => true
-    master.vm.provision "shell", path: "puppet-master-install.sh"
+    master.vm.provision "shell",
+      path: "puppet-master-install.sh",
+      env: {"NETWORK" => "#{NETWORK}"}
     master.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--memory", "4096"]
     end
   end
 
-  config.vm.define "puppetagent" do |agent|
-    agent.vm.box = "centos/7"
-    agent.vm.hostname = "puppet-agent#{NETWORK}"
-    agent.vm.network "private_network", ip: "10.20.1.81"
-    agent.vm.provision :hosts, :sync_hosts => true
-    agent.vm.provision "shell", path: "puppet-agent-install.sh"    
-  end
+# config.vm.define "puppetagent" do |agent|
+#   agent.vm.box = "centos/7"
+#   agent.vm.hostname = "puppet-agent#{NETWORK}"
+#   agent.vm.network "private_network", ip: "10.20.1.81"
+#   agent.vm.provision :hosts, :sync_hosts => true
+#   agent.vm.provision "shell",
+#     path: "puppet-agent-install.sh",
+#     env: {"NETWORK" => "#{NETWORK}"}
+# end
 
   config.vm.define "coreosagent" do |agent|
     agent.ssh.insert_key = false
@@ -48,7 +52,10 @@ Vagrant.configure("2") do |config|
 
     if File.exist?(CLOUD_CONFIG_PATH)
       agent.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
-      agent.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
+      agent.vm.provision :shell,
+        :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/",
+        :privileged => true,
+        :env => {"NETWORK" => "#{NETWORK}"}
     end
 
   end
