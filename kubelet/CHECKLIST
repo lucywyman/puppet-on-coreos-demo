@@ -1,0 +1,15 @@
+enable etcd-member
+start etcd-member
+
+mkdir -p /etc/flannel/
+copy options.env /etc/flannel/
+
+mkdir /etc/systemd/system/flanneld.service.d/
+copy 30-ExecStartPre-etcd-key.conf /etc/systemd/system/flanneld.service.d/
+copy 40-ExecStartPre-symlink.conf /etc/systemd/system/flanneld.service.d/
+
+mkdir -p /etc/kubernetes/manifests/
+copy *.yaml /etc/kubernetes/manifests/
+copy kubeconfig /etc/kubernetes
+
+systemctl start kubernetes

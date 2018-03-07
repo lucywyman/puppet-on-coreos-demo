@@ -1,0 +1,14 @@
+[Service]
+Environment=KUBELET_VERSION=v1.9.3_coreos.0
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+ExecStart=/usr/lib/coreos/kubelet-wrapper \
+  --kubeconfig=/etc/kubernetes/kubeconfig \
+  --allow-privileged=true \
+  --pod-manifest-path=/etc/kubernetes/manifests \
+  --hostname-override=159.65.111.31 \
+  --cluster-dns=10.13.0.10 \
+  --cluster-domain=cluster.local
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
