@@ -147,21 +147,17 @@ mv kubernetes.yaml /etc/puppetlabs/code/environments/production/hieradata
 Then open a file `/etc/puppetlabs/code/environments/production/manifests/site.pp` with
 the following:
 ```
-node coreos-agent.my.network.net {
+node 'coreos-agent.my.network.net' {
   class {'kubernetes':
     controller           => true,
     bootstrap_controller => true,
-  }
-
-  class {'kubernetes':
-    controller => true,
   }
 }
 ```
 
 On the CoreOS machine run
 ```
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 -v /opt/python/bin/pip3:/bin/pip3 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 -v /opt/python/bin/pip3:/bin/pip3 -v /opt/bin:/opt/bin --network host puppet/puppet-agent
 ```
 
 ## Networking Issues
