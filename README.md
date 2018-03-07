@@ -55,7 +55,11 @@ puppet agent -t
 ```
 vagrant ssh coreosagent
 sudo su -
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged \
+--hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
+-v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /opt/bin:/opt/bin \
+--network host puppet/puppet-agent
 ```
 
 Sign the cert on the puppet master VM:
@@ -65,7 +69,11 @@ puppet cert sign --all
 
 Then run puppet agent again on the CoreOS VM
 ```
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent.g -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged \
+--hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
+-v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /opt/bin:/opt/bin \
+--network host puppet/puppet-agent
 ```
 
 And there you have it!
@@ -101,7 +109,12 @@ and you should see 'Hello World!' printed.
 
 Then do the same on the CoreOS machine:
 ```
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged \
+--hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
+-v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /opt/bin:/opt/bin \
+--network host puppet/puppet-agent
+
 cat /etc/motd
 ```
 
@@ -122,15 +135,17 @@ Install the module on the master (I chose to manually install):
 puppet module install puppetlabs-kubernetes
 ```
 
-Generate the module config on the master
+Generate the module config on the master, take care to replace $COREOS_FQDN with the actual fully qualified domain name of your coreos node!
 ```
-docker run --rm -v $(pwd):/mnt -e OS=ubuntu -e VERSION=1.9.2 \
--e CONTAINER_RUNTIME=docker -e CNI_PROVIDER=weave -e FQDN=$HOSTNAME \
--e IP="%{::ipaddress_enp0s8}" \
--e BOOTSTRAP_CONTROLLER_IP="%{::ipaddress_enp0s8}" \
--e ETCD_INITIAL_CLUSTER="etcd-kube-master=http://%{::ipaddress_enp0s8}:2380" \
--e ETCD_IP="%{::ipaddress_enp0s8}" \
--e KUBE_API_ADVERTISE_ADDRESS="%{::ipaddress_enp0s8}" \
+docker run --rm -v $(pwd):/mnt -e OS=coreos -e VERSION=1.9.2 \
+-e CONTAINER_RUNTIME=docker -e CNI_PROVIDER=flannel -e \
+FQDN=coreos-agent \
+-e IP="10.20.1.82" \
+-e KUBE_IMAGE_TAG="v1.9.3_coreos.0" \
+-e BOOTSTRAP_CONTROLLER_IP="10.20.1.82" \
+-e ETCD_INITIAL_CLUSTER="etcd-kube-master=http://10.20.1.82:2380" \
+-e ETCD_IP="10.20.1.82" \
+-e KUBE_API_ADVERTISE_ADDRESS="10.20.1.82" \
 -e INSTALL_DASHBOARD=true puppet/kubetool
 ```
 
@@ -139,7 +154,21 @@ directory. Move that file to where you keep your [hieradata]()
 
 If you're not sure, most likely:
 ```
-mv kubernetes.yaml /etc/puppetlabs/code/environments/production/hieradata
+mv kubernetes.yaml /etc/puppetlabs/code/environments/production/data
+```
+
+**Note**: For now, you'll also need to manually add `kubernetes::kube_image_tag: "v1.9.3_coreos.0"` to the data file
+
+### Install Kubectl Binary
+
+For Reasons, you may need to install the kubectl binary on the coreos system. 
+
+```
+mkdir /opt/bin
+curl -L https://dl.k8s.io/v1.7.13/kubernetes-server-linux-amd64.tar.gz -o ks.tar.gz
+tar -xvf ks.tar.gz
+mv kubernetes/server/bin/kubectl /opt/bin/
+mv kubernetes/server/bin/kubelet /opt/bin/
 ```
 
 ### Install Kubernetes
@@ -157,7 +186,17 @@ node 'coreos-agent.my.network.net' {
 
 On the CoreOS machine run
 ```
-docker run -p 443:443 -p 80:80 --rm --privileged --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 -v /opt/python/bin/pip3:/bin/pip3 -v /opt/bin:/opt/bin --network host puppet/puppet-agent
+docker run -p 443:443 -p 80:80 --rm --privileged \
+--hostname coreos-agent \
+-v /tmp:/tmp \
+-v /etc:/etc \
+-v /var:/var \
+-v /usr:/usr \
+-v /lib64:/lib64 \
+-v /opt/python/bin/pip3:/bin/pip3 \
+-v /opt/bin:/opt/bin \
+-v /opt/bin/kubectl:/bin/kubectl \
+--network host puppet/puppet-agent
 ```
 
 ## Networking Issues
