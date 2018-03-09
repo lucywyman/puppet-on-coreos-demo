@@ -2,15 +2,11 @@
 # # vi: set ft=ruby :
 
 CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
-SECOND_COREOS_CONFIG = File.join(File.dirname(__FILE__), "second-coreos-data")
-NETWORK = '.delivery.puppetlabs.net'
-#NETWORK = '.wellsely.net'
-#NETWORK = ''
 
 Vagrant.configure("2") do |config|
   config.vm.define "puppetmaster" do |master|
     master.vm.box = "ubuntu/xenial64"
-    master.vm.hostname = "puppet-master#{NETWORK}"
+    master.vm.hostname = "puppet-master"
     master.vm.network "private_network", ip: "10.20.1.80"
     master.vm.provision :hosts, :sync_hosts => true
     master.vm.provision "shell", path: "puppet-master-install.sh"
@@ -21,7 +17,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "puppetagent" do |agent|
     agent.vm.box = "centos/7"
-    agent.vm.hostname = "puppet-agent#{NETWORK}"
+    agent.vm.hostname = "puppet-agent"
     agent.vm.network "private_network", ip: "10.20.1.81"
     agent.vm.provision :hosts, :sync_hosts => true
     agent.vm.provision "shell", path: "puppet-agent-install.sh"    
@@ -32,7 +28,7 @@ Vagrant.configure("2") do |config|
     agent.ssh.forward_agent = true
     agent.vm.box = "coreos-beta"
     agent.vm.box_url = "https://storage.googleapis.com/beta.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
-    agent.vm.hostname = "coreos-agent#{NETWORK}"
+    agent.vm.hostname = "coreos-agent"
 
     agent.vm.provider :virtualbox do |v| 
       # On VirtualBox, we don't have guest additions or functional vboxsf
@@ -59,7 +55,7 @@ Vagrant.configure("2") do |config|
     agent.ssh.forward_agent = true
     agent.vm.box = "coreos-beta"
     agent.vm.box_url = "https://storage.googleapis.com/beta.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
-    agent.vm.hostname = "second-coreos.delivery.puppetlabs.net"
+    agent.vm.hostname = "second-coreos"
 
     agent.vm.provider :virtualbox do |v| 
       # On VirtualBox, we don't have guest additions or functional vboxsf

@@ -206,6 +206,8 @@ here's how to make sure all your ducks are in a row:
 
 ### Networks
 
+*Possibly not relevant anymore*
+
 I've found that when I'm on a <TYPE OF NETWORK> the VMs append that
 network to the specified hostname for the VMs. This means that in
 order for the VMs to talk to each other they actually need to connect
