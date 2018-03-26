@@ -1,6 +1,6 @@
 #cloud-config
 
-hostname: coreos-agent.delivery.puppetlabs.net
+hostname: coreos-agent
 
 coreos:
   units:
@@ -17,7 +17,7 @@ coreos:
       ExecStartPre=-/usr/bin/docker kill puppet1
       ExecStartPre=-/usr/bin/docker rm puppet1
       ExecStartPre=/usr/bin/docker pull puppet/puppet-agent
-      ExecStart=/usr/bin/docker run --rm --privileged --name puppetagent --hostname coreos-agent.delivery.puppetlabs.net -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
+      ExecStart=/usr/bin/docker run --rm --privileged --name puppetagent --hostname coreos-agent -v /tmp:/tmp -v /etc:/etc -v /var:/var -v /usr:/usr -v /lib64:/lib64 --network host puppet/puppet-agent
 
       [Install]
       WantedBy=multi-user.target
@@ -30,7 +30,7 @@ coreos:
 
       [Network]
       DNS=10.20.1.82
-      Domains=coreos-agent.delivery.puppetlabs.net
+      Domains=coreos-agent
       Address=10.20.1.82
       Gateway=10.0.2.2
 
@@ -39,5 +39,7 @@ write_files:
     permissions: 0644
     content: |
       [agent]
-      server=puppet-master.delivery.puppetlabs.net
-      certname=coreos-agent.delivery.puppetlabs.net
+      server=puppet-master
+      certname=coreos-agent
+  - path: /etc/resolv.conf
+    content: nameserver 8.8.8.8
