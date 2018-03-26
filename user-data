@@ -41,3 +41,5 @@ write_files:
       [agent]
       server=puppet-master
       certname=coreos-agent
+  - path: /etc/resolv.conf
+    content: nameserver 8.8.8.8

@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Configure /etc/hosts file
+#sudo echo "# Host config for Puppet Master and Agent Nodes
+#10.20.1.80   puppet-master puppet-master
+#10.20.1.81   puppet-agent puppet-agent
+#10.20.1.82   coreos-agent coreos-agent" >> /etc/hosts
+
+# Add optional alternate DNS names to /etc/puppet/puppet.conf
+sudo echo "[agent]
+server=puppet-master" >> /etc/puppetlabs/puppet/puppet.conf
+
 # Install python
 VERSIONS=${VERSIONS:-"3.5.4.3504"}
 GLIB="-glibc-2.12-404899"

@@ -214,10 +214,18 @@ here's how to make sure all your ducks are in a row:
 
 ### Networks
 
-Sometimes the VMs append the local network name to the specified hostname for
-the VMs. This means that in order for the VMs to talk to each other they
-actually need to connect to `puppet-master.my.network.net` instead of just
-`puppet-master`. Setting the hostnames on the machines to `myhostname.my.network.net` takes 3 steps:
+*Possibly not relevant anymore*
+
+I've found that when I'm on a <TYPE OF NETWORK> the VMs append that
+network to the specified hostname for the VMs. This means that in
+order for the VMs to talk to each other they actually need to connect
+to `puppet-master.my.network.net` instead of just `puppet-master`. You
+can find the name of your networkon Ubuntu by TODO.
+
+I've set up the provisioning scrips to read the network name from an
+environment variable, so if you run into networking issues initially
+you can set that variable and rebuild your VMs to see if that
+ameliorates the issue:
 
 ```
 hostname myhostname.my.network.net
