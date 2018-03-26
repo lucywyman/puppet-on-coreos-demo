@@ -28,36 +28,34 @@ vagrant plugin install vagrant-hosts
 
 ### Create VMs
 
-First thing's first: bring all the machines up
+First thing's first: bring up some VMs. There are 4 VMs included here: a
+puppet master, a CentOS puppet agent (for debugging), and 2 CoreOS machines
+(an extra one for debugging). For this demo, you just need the master and 1
+CoreOS agent.
 ```
-vagrant up
+vagrant up puppetmaster coreosagent
 ```
 
-Then run puppet on both the master and CentOS agent to make sure your
-setup is working
-
-```
-vagrant ssh puppetagent
-sudo su -
-puppet agent -t
-```
+Then run puppet on the master to make sure puppet is installed and working
+correctly.
 
 ```
 vagrant ssh puppetmaster
 sudo su -
 puppet agent -t
-puppet cert sign --all
-puppet agent -t
 ```
 
 ### Connect CoreOS Agent
+
+The puppet agent is run inside a container on CoreOS. You mount any directories you want to make changes to the container, give it privileges, and then run the puppet agent and it can make changes to the underlying CoreOS system. 
 
 ```
 vagrant ssh coreosagent
 sudo su -
 docker run -p 443:443 -p 80:80 --rm --privileged \
---hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
--v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /etc:/etc \
+-v /var:/var \
+-v /usr:/usr \
 -v /opt/bin:/opt/bin \
 --network host puppet/puppet-agent
 ```
@@ -70,8 +68,9 @@ puppet cert sign --all
 Then run puppet agent again on the CoreOS VM
 ```
 docker run -p 443:443 -p 80:80 --rm --privileged \
---hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
--v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /etc:/etc \
+-v /var:/var \
+-v /usr:/usr \
 -v /opt/bin:/opt/bin \
 --network host puppet/puppet-agent
 ```
@@ -95,7 +94,7 @@ Then add the following to `/etc/puppetlabs/code/environments/production/manifest
 ```
 node default {
   class { 'motd':
-    content => "Hello world!/n",
+    content => "Hello world!\n",
   }
 }
 ```
@@ -110,8 +109,9 @@ and you should see 'Hello World!' printed.
 Then do the same on the CoreOS machine:
 ```
 docker run -p 443:443 -p 80:80 --rm --privileged \
---hostname coreos-agent -v /tmp:/tmp -v /etc:/etc \
--v /var:/var -v /usr:/usr -v /lib64:/lib64 \
+-v /etc:/etc \
+-v /var:/var \
+-v /usr:/usr \
 -v /opt/bin:/opt/bin \
 --network host puppet/puppet-agent
 
@@ -135,7 +135,7 @@ Install the module on the master (I chose to manually install):
 puppet module install puppetlabs-kubernetes
 ```
 
-Generate the module config on the master, take care to replace $COREOS_FQDN with the actual fully qualified domain name of your coreos node!
+Generate the module config on the master
 ```
 docker run --rm -v $(pwd):/mnt -e OS=coreos -e VERSION=1.9.2 \
 -e CONTAINER_RUNTIME=docker -e CNI_PROVIDER=flannel -e \
@@ -149,8 +149,9 @@ FQDN=coreos-agent \
 -e INSTALL_DASHBOARD=true puppet/kubetool
 ```
 
-This will generate a file `kubernetes.yaml` in the current working
-directory. Move that file to where you keep your [hieradata]()
+This will generate a [hiera data](https://docs.puppet.com/hiera/) file
+`kubernetes.yaml` in the current working directory. Move that file to where
+you keep your [hieradata](https://puppet.com/docs/puppet/5.3/hiera_intro.html#hieras-three-config-layers)
 
 If you're not sure, most likely:
 ```
@@ -164,7 +165,6 @@ mv kubernetes.yaml /etc/puppetlabs/code/environments/production/data
 For Reasons, you may need to install the kubectl binary on the coreos system. 
 
 ```
-mkdir /opt/bin
 curl -L https://dl.k8s.io/v1.7.13/kubernetes-server-linux-amd64.tar.gz -o ks.tar.gz
 tar -xvf ks.tar.gz
 mv kubernetes/server/bin/kubectl /opt/bin/
@@ -184,11 +184,19 @@ node 'coreos-agent.my.network.net' {
 }
 ```
 
+Do a few other things:
+
+```
+export KUBECONFIG=/etc/kubernetes/admin.conf
+systemctl start etcd-member
+echo "[Service]" >> /etc/systemd/system/kubelet.service
+systemctl daemon-reload && systemctl start kubelet
+```
+
 On the CoreOS machine run
 ```
 docker run -p 443:443 -p 80:80 --rm --privileged \
---hostname coreos-agent \
--v /tmp:/tmp \
+-h coreos-agent \
 -v /etc:/etc \
 -v /var:/var \
 -v /usr:/usr \
@@ -206,34 +214,30 @@ here's how to make sure all your ducks are in a row:
 
 ### Networks
 
-I've found that when I'm on a <TYPE OF NETWORK> the VMs append that
-network to the specified hostname for the VMs. This means that in
-order for the VMs to talk to each other they actually need to connect
-to `puppet-master.my.network.net` instead of just `puppet-master`. You
-can find the name of your networkon Ubuntu by TODO.
-
-I've set up the provisioning scrips to read the network name from an
-environment variable, so if you run into networking issues initially
-you can set that variable and rebuild your VMs to see if that
-ameliorates the issue:
+Sometimes the VMs append the local network name to the specified hostname for
+the VMs. This means that in order for the VMs to talk to each other they
+actually need to connect to `puppet-master.my.network.net` instead of just
+`puppet-master`. Setting the hostnames on the machines to `myhostname.my.network.net` takes 3 steps:
 
 ```
-export NETWORK=.my.network.net
+hostname myhostname.my.network.net
+export HOSTNAME=$HOSTNAME.my.network.net
+# And change the hostname in your /etc/hostname file
+vi /etc/hostname
 ```
-
-I know the extra dot is unfortunately, but I'm too lazy to set up an
-if statement to include it if the variable is set :P 
 
 ### /etc/hosts
 
-This should 
+Make sure that your hosts all know about each other. The vagrant hosts plugin
+should take care of this for you, but in case something goes awry your
+`/etc/hosts` file should look something like this:
 
 On the puppet master:
 ```
 root@puppet-master:~# cat /etc/hosts
 127.0.0.1   localhost
 10.20.1.82  coreos-agent    coreosagent
-10.20.1.80  puppet-master   puppet-master.my.network.net
+10.20.1.80  puppet-master   puppet-master
 127.0.1.1   puppet-master   puppetmaster
 127.0.1.1   ubuntu-xenial   ubuntu-xenial
 ```
@@ -244,15 +248,5 @@ coreos-agent ~ # cat /etc/hosts
 127.0.0.1 localhost
 127.0.1.1 coreos-agent coreosagent
 10.20.1.82 coreos-agent coreosagent
-10.20.1.80 puppet-master puppet-master.my.network.net
-```
-
-### Hostname
-
-Make sure your hosts know their own hostname!
-
-```
-hostname myhost.my.network.net
-export HOSTNAME=$HOSTNAME.my.network.net
-vi /etc/hostname # Set the hostname here
+10.20.1.80 puppet-master puppet-master
 ```

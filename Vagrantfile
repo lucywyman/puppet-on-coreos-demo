@@ -3,9 +3,9 @@
 
 CLOUD_CONFIG_PATH = File.join(File.dirname(__FILE__), "user-data")
 SECOND_COREOS_CONFIG = File.join(File.dirname(__FILE__), "second-coreos-data")
-NETWORK = '.delivery.puppetlabs.net'
+#NETWORK = '.delivery.puppetlabs.net'
 #NETWORK = '.wellsely.net'
-#NETWORK = ''
+NETWORK = ''
 
 Vagrant.configure("2") do |config|
   config.vm.define "puppetmaster" do |master|
@@ -59,7 +59,7 @@ Vagrant.configure("2") do |config|
     agent.ssh.forward_agent = true
     agent.vm.box = "coreos-beta"
     agent.vm.box_url = "https://storage.googleapis.com/beta.release.core-os.net/amd64-usr/current/coreos_production_vagrant.json"
-    agent.vm.hostname = "second-coreos.delivery.puppetlabs.net"
+    agent.vm.hostname = "second-coreos#{NETWORK}"
 
     agent.vm.provider :virtualbox do |v| 
       # On VirtualBox, we don't have guest additions or functional vboxsf
