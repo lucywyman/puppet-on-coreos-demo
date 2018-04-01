@@ -157,20 +157,6 @@ If you're not sure, most likely:
 ```
 mv kubernetes.yaml /etc/puppetlabs/code/environments/production/data
 ```
-
-**Note**: For now, you'll also need to manually add `kubernetes::kube_image_tag: "v1.9.3_coreos.0"` to the data file
-
-### Install Kubectl Binary
-
-For Reasons, you may need to install the kubectl binary on the coreos system. 
-
-```
-curl -L https://dl.k8s.io/v1.7.13/kubernetes-server-linux-amd64.tar.gz -o ks.tar.gz
-tar -xvf ks.tar.gz
-mv kubernetes/server/bin/kubectl /opt/bin/
-mv kubernetes/server/bin/kubelet /opt/bin/
-```
-
 ### Install Kubernetes
 
 Then open a file `/etc/puppetlabs/code/environments/production/manifests/site.pp` with
@@ -184,26 +170,15 @@ node 'coreos-agent.my.network.net' {
 }
 ```
 
-Do a few other things:
-
-```
-export KUBECONFIG=/etc/kubernetes/admin.conf
-systemctl start etcd-member
-echo "[Service]" >> /etc/systemd/system/kubelet.service
-systemctl daemon-reload && systemctl start kubelet
-```
-
 On the CoreOS machine run
 ```
 docker run -p 443:443 -p 80:80 --rm --privileged \
--h coreos-agent \
 -v /etc:/etc \
 -v /var:/var \
 -v /usr:/usr \
 -v /lib64:/lib64 \
--v /opt/python/bin/pip3:/bin/pip3 \
+-v /run:/run \
 -v /opt/bin:/opt/bin \
--v /opt/bin/kubectl:/bin/kubectl \
 --network host puppet/puppet-agent
 ```
 

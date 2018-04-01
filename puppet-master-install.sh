@@ -11,12 +11,6 @@ else
     sudo apt-get -yq install puppetserver docker.io
     sudo service puppetserver start
 
-    # Configure /etc/hosts file
-    echo "# Host config for Puppet Master and Agent Nodes
-10.20.1.80   puppet-master puppet-master
-10.20.1.81   puppet-agent puppet-agent
-10.20.1.82   coreos-agent coreos-agent" >> /etc/hosts
-
     # Add optional alternate DNS names to /etc/puppet/puppet.conf
     sudo echo "
 [main]
